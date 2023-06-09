@@ -84,7 +84,7 @@ def switchIP():
     proxies = {
         'http': 'socks5://localhost:9050',
         'https': 'socks5://localhost:9050'}
-    url = 'https://api.ipify.org/'
+    url = 'http://ident.me/'
     ip = requests.get(url, proxies=proxies).text
     print('[+] New IP: ' + ip)
 
