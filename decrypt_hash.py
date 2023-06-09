@@ -9,9 +9,9 @@ import argparse
 hashes = 'dehashed_hashes.txt'
 cracked_hashes = 'cracked_hashes.txt'
 parser = argparse.ArgumentParser()
-parser.add_argument('-f', action='store', dest='hashes', nargs='?', default=hashes, const=hashes,
+parser.add_argument('-f', action='store', dest='hashes', nargs='?', default=hashes, const=hashes, required=True
                     help='Input any hash file separated by newline in format {hash}.')
-parser.add_argument('-o', action='store', dest='cracked_hashes', nargs='?', const=cracked_hashes,
+parser.add_argument('-o', action='store', dest='cracked_hashes', nargs='?', const=cracked_hashes, required=True
                     help='Stores all hashes and cracked passwords in files. ')
 args = parser.parse_args()
 
@@ -78,7 +78,7 @@ def filter_web_hashes(data, raw_hashes):
 
 def switchIP():
     print('[+] Restarting TOR...')
-    os.system('brew services restart tor > /dev/null')
+    os.system('sudo systemctl restart tor > /dev/null')
     sleep(10)
     proxies = {
         'http': 'socks5://localhost:9050',
