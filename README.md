@@ -12,10 +12,16 @@ options:
 ```
 
 
-## Setup Requirements for Linux
-1. Brew: https://www.digitalocean.com/community/tutorials/how-to-install-and-use-homebrew-on-linux
-2. Tor Browser: https://community.torproject.org/onion-services/setup/install/
+## Setup TOR Requirements for Linux
+```
+$ sudo vim /etc/tor/torrc
 
+# Uncomment this line
+ControlPort 9051
+CookieAuthentication 1
+```
+
+Needs root privileges to access tor auth file
 
  ## Example Output:
 ```
