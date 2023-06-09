@@ -2,16 +2,17 @@ import requests
 from fake_useragent import UserAgent
 from bs4 import BeautifulSoup
 from time import sleep
-import os
+from stem import Signal
+from stem.control import Controller
 import sys
 import argparse
 
 hashes = 'dehashed_hashes.txt'
 cracked_hashes = 'cracked_hashes.txt'
 parser = argparse.ArgumentParser()
-parser.add_argument('-f', action='store', dest='hashes', nargs='?', default=hashes, const=hashes, required=True
+parser.add_argument('-f', action='store', dest='hashes', nargs='?', default=hashes, const=hashes, required=True,
                     help='Input any hash file separated by newline in format {hash}.')
-parser.add_argument('-o', action='store', dest='cracked_hashes', nargs='?', const=cracked_hashes, required=True
+parser.add_argument('-o', action='store', dest='cracked_hashes', nargs='?', const=cracked_hashes, required=True,
                     help='Stores all hashes and cracked passwords in files. ')
 args = parser.parse_args()
 
@@ -21,7 +22,6 @@ def init_useragent():
 def filter_file_hashes(file):
     hashes_filtered = []
     for hash in file:
-        #hash = hash.strip().split('.com:')[1:][0]
         raw_hash = ''.join(hash)
         hashes_filtered.append(raw_hash)
 
@@ -71,41 +71,44 @@ def filter_web_hashes(data, raw_hashes):
             combo = hash.split('>')[1].split('<')[0]
             #all_cracked.append(combo)
             all.append(combo)
-            
+
         print('[+] Success! Returned ' + str(len(mydivs)) + ' passwords!')
         display_hashes(all)
-        
 
 def switchIP():
-    print('[+] Restarting TOR...')
-    os.system('sudo systemctl restart tor > /dev/null')
+    print('[+] Requesting new IP from TOR...')
     sleep(10)
+    with Controller.from_port(port = 9051) as c:
+      c.authenticate()
+      c.signal(Signal.NEWNYM)
     proxies = {
         'http': 'socks5://localhost:9050',
         'https': 'socks5://localhost:9050'}
-    url = 'https://api.ipify.org'
+    url = 'https://api.ipify.org/'
     ip = requests.get(url, proxies=proxies).text
     print('[+] New IP: ' + ip)
 
 def send_hashes():
     ua = init_useragent()
     hash_chunks = init_hash_list()
+    tmp_currline = 0
     for hash_list in hash_chunks:
         switchIP()
         print('[+] Sending ' + str(len(hash_list)) + ' hashes...')
+        print('[+] Line ', tmp_currline, 'of' ,len(set(x for eachline in hash_chunks for x in eachline)))
         session, headers = create_session(ua)
         raw_hashes = "\r\n".join(hash_list)
         data = make_request(session, raw_hashes, headers)
         filter_web_hashes(data, raw_hashes)
-        
+        tmp_currline += len(hash_list)
 
 def display_hashes(a):
     print('[+] Cracked ' + str(len(a)) + ' hashes:')
     file = open(args.cracked_hashes, 'a')
     for combo in a:
-    	file.write(combo)
-    	file.write('\n')
-    	print(combo)
+        file.write(combo)
+        file.write('\n')
+        print(combo)
     file.close()
 
 if __name__ == '__main__':
@@ -113,4 +116,3 @@ if __name__ == '__main__':
     hashes_com_url = "https://hashes.com:443/en/decrypt/hash"
     send_hashes()
     print('[+] Cracked passwords written to ' + args.cracked_hashes)
-    #display_hashes()
